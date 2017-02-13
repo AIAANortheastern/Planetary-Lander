@@ -1,4 +1,8 @@
-#include "mock/Wire.h"
+#ifdef DEBUG
+    #include "mock/Wire.h"
+#else
+    #include "Wire.h"
+#endif
 #include "i2c.h"
 
 int i2c_begin(){
@@ -21,7 +25,7 @@ uint16_t read16(int addr, uint8_t reg){
     Wire.endTransmission();
 
     Wire.requestFrom(addr, 2);
-    return (Wire.read() << 8) | Wire.read();
+    return ((uint16_t)Wire.read() << 8) | (uint16_t)Wire.read();
 }
 
 uint32_t read24(int addr, uint8_t reg){
@@ -30,7 +34,7 @@ uint32_t read24(int addr, uint8_t reg){
     Wire.endTransmission();
 
     Wire.requestFrom(addr, 3);
-    return (Wire.read() << 16) | (Wire.read() << 8) | Wire.read();
+    return ((uint32_t)Wire.read() << 16) | ((uint32_t)Wire.read() << 8) | (uint32_t)Wire.read();
 }
 
 uint32_t read32(int addr, uint8_t reg){
@@ -39,7 +43,7 @@ uint32_t read32(int addr, uint8_t reg){
     Wire.endTransmission();
 
     Wire.requestFrom(addr, 4);
-    return (Wire.read() << 24) | (Wire.read() << 16) | (Wire.read() << 8) | Wire.read();
+    return ((uint32_t)Wire.read() << 24) | ((uint32_t)Wire.read() << 16) | ((uint32_t)Wire.read() << 8) | (uint32_t)Wire.read();
 }
 
 uint16_t read16LE(int addr, uint8_t reg){
@@ -48,7 +52,7 @@ uint16_t read16LE(int addr, uint8_t reg){
     Wire.endTransmission();
 
     Wire.requestFrom(addr, 2);
-    return Wire.read() | (Wire.read() << 8) ;
+    return (uint16_t)Wire.read() | ((uint16_t)Wire.read() << 8) ;
 }
 
 uint32_t read24LE(int addr, uint8_t reg){
@@ -57,7 +61,7 @@ uint32_t read24LE(int addr, uint8_t reg){
     Wire.endTransmission();
 
     Wire.requestFrom(addr, 3);
-    return  Wire.read() | (Wire.read() << 8) | (Wire.read() << 16);
+    return (uint32_t)Wire.read() | ((uint32_t)Wire.read() << 8) | ((uint32_t)Wire.read() << 16);
 }
 
 uint32_t read32LE(int addr, uint8_t reg){
@@ -66,7 +70,7 @@ uint32_t read32LE(int addr, uint8_t reg){
     Wire.endTransmission();
 
     Wire.requestFrom(addr, 4);
-    return Wire.read() | (Wire.read() << 8) | (Wire.read() << 16) | (Wire.read() << 24);
+    return (uint32_t)Wire.read() | ((uint32_t)Wire.read() << 8) | ((uint32_t)Wire.read() << 16) | ((uint32_t)Wire.read() << 24);
 }
 
 void readBuffer(int addr, uint8_t reg, uint8_t * buffer, int len){

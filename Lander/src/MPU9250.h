@@ -40,6 +40,7 @@ public:
     int readGyrometerData(int16_t* output); // rps
     int readMagneoometerData(int16_t* output); // uT
     int getQuaternion(float *output);
+    int getQuaternion(float *output, int16_t gyro[], int16_t acc[], int16_t magno[]);
 };
 
 

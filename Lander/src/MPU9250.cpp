@@ -135,6 +135,14 @@ int MPU9250::getQuaternion(float *output) {
     return 0;
 }
 
+int MPU9250::getQuaternion(float *output, int16_t gyro[], int16_t acc[], int16_t magno[]) {
+    Quaternion(acc[0], acc[1], acc[2], gyro[0], gyro[1], gyro[2], magno[0], magno[1], magno[2]);
+    output[0] = q[0];
+    output[1] = q[1];
+    output[2] = q[2];
+    output[3] = q[3];
+    return 0;
+}
 
 int AK8963::read(int16_t *output) {
     uint16_t buffer[7];
