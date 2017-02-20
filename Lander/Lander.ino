@@ -6,31 +6,34 @@
 
 #include "Wire.h"
 
-#include "TSL2591.h"
-#include "BME280.h"
-#include "MPU9250.h"
+#include "src/TSL2591.h"
+#include "src/BME280.h"
+#include "src/MPU9250.h"
 
 TSL2591 tsl = TSL2591();
 BME280 bme = BME280(0x77);//0x76 if SDI grounded, or 0x77 if SDI is attached to logic level
 MPU9250 mpu = MPU9250(0x69);// 0x68 if AD0 is grounded, 0x69 if AD0 is at logic level
 
 void setup() {
-    Serial.begin(115200);
+    Serial.begin(9600);
+    while(!Serial){}
     Serial.println("Connected");
     //I2c
-    if(!Wire.begin()){
-        Serial.println("I2c error");
-    }
+    Wire.begin();
     //TSL2591
-    if(!tsl.start(TSL2591_GAIN_25X, TSL2591_INTEGRATION_TIME_100MS)){
+    if(tsl.start(TSL2591_GAIN_1X, TSL2591_INTEGRATION_TIME_100MS) != 0){
       Serial.println("Couldn't connect to TSL2591 sensor");
     }
     //BME280
-    if (!bme.start(BME280_NO_OVERSAMPLING, BME280_NO_OVERSAMPLING, BME280_NO_OVERSAMPLING)) {
+    if (bme.start() != 0) {
       Serial.println("Couldn't connect to BME280 sensor");
     }
+    delay(300);
+    while(bme.isReadingCalibration())
+          delay(100);
+    bme.set(BME280_16x_OVERSAMPLING, BME280_16x_OVERSAMPLING, BME280_16x_OVERSAMPLING);
     //MPU9250
-    if(!mpu.start()){
+    if(mpu.start() != 0){
         Serial.println("Couldn't connect to MPU9250 sensor");
     }
 }
@@ -40,14 +43,14 @@ void loop() {
     float lux, orientation[4];
     double temp, pres, humd;
     //TSL2591
-    if(!tsl.getLux(&lux)){
+    if(tsl.getLux(&lux) != 0){
       Serial.println("Error with TSL2591 sensor");
     } else {
         Serial.print("Lux: ");
-        Serial.println(lux);
+        Serial.println((uint32_t)lux);
     }
     //BME280
-    if (!bme.read_processed(&temp, &pres, &humd)) {
+    if (bme.read_processed(&temp, &pres, &humd) != 0) {
       Serial.println("Error with BME280 sensor");
     } else {
         Serial.print("Temperature: ");
@@ -88,5 +91,5 @@ void loop() {
         Serial.print(", ");
         Serial.println(orientation[3]);
     }
-    delay(50);
+    delay(500);
 }
