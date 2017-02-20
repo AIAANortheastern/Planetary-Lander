@@ -28,6 +28,13 @@ typedef enum {
     MPU9250_ACCEL_RANGE_16G,
 } mpu9250_accel_range;
 
+class AK8963 {
+    uint8_t address = 0X0C;
+public:
+    int start();
+    int read(int16_t* output);
+};
+
 class MPU9250 {
     uint8_t address;
     AK8963 mageno;
@@ -42,14 +49,5 @@ public:
     int getQuaternion(float *output);
     int getQuaternion(float *output, int16_t gyro[], int16_t acc[], int16_t magno[]);
 };
-
-
-class AK8963 {
-    uint8_t address = 0X0C;
-public:
-    int start();
-    int read(int16_t* output);
-};
-
 
 #endif //LANDER_MPU9250_H

@@ -10,7 +10,7 @@ int MPU9250::start() {
 
 int MPU9250::readAccelometerData(int16_t *output) {
     uint16_t buffer[6];
-    readBuffer(address, MPU9250_ACCEL_REG, buffer, 6);
+    readBuffer(address, MPU9250_ACCEL_REG, (uint8_t*)buffer, 6);
     output[0] = (buffer[0] << 8) | buffer[1];
     output[1] = (buffer[2] << 8) | buffer[3];
     output[2] = (buffer[4] << 8) | buffer[5];
@@ -19,7 +19,7 @@ int MPU9250::readAccelometerData(int16_t *output) {
 
 int MPU9250::readGyrometerData(int16_t *output) {
     uint16_t buffer[6];
-    readBuffer(address, MPU9250_GYRO_REG, buffer, 6);
+    readBuffer(address, MPU9250_GYRO_REG, (uint8_t*)buffer, 6);
     output[0] = (buffer[0] << 8) | buffer[1];
     output[1] = (buffer[2] << 8) | buffer[3];
     output[2] = (buffer[4] << 8) | buffer[5];
@@ -146,7 +146,7 @@ int MPU9250::getQuaternion(float *output, int16_t gyro[], int16_t acc[], int16_t
 
 int AK8963::read(int16_t *output) {
     uint16_t buffer[7];
-    readBuffer(address, AK8963_DATA_REG, buffer, 7);
+    readBuffer(address, AK8963_DATA_REG, (uint8_t*)buffer, 7);
     output[0] = (buffer[1] << 8) | buffer[0];
     output[1] = (buffer[3] << 8) | buffer[2];
     output[2] = (buffer[5] << 8) | buffer[4];
