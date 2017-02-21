@@ -22,6 +22,9 @@
   
 */
 
+#ifndef TinyGPS_CPP
+#define TinyGPS_CPP
+
 #include "Arduino.h"
 #include "TinyGPS.h"
 
@@ -304,3 +307,5 @@ float TinyGPS::distance_between (float lat1, float long1, float lat2, float long
   delta = atan2(delta, denom); 
   return delta * 6372795; 
 }
+
+#endif
