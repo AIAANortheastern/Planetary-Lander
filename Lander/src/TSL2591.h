@@ -32,6 +32,16 @@ typedef enum {
     TSL2591_GAIN_9876X = 0x30
 } tsl2591_gain;
 
+
+/*
+ * @note: The TSL has strange behavior with a lot of light
+ * @note: It currently displays as a uint, change to a float
+ * @note: At smaller light intensities, it displays 0.
+ * @note: Consider changing the gain.
+ * @todo: add extra code to handle that behavior in the loop()
+ * @note: It's lit.
+ *
+ **/
 class TSL2591 {
     float atime, again;
     tsl2591_gain _gain;
