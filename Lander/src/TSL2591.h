@@ -6,8 +6,6 @@
 #define TSL2591_CTRL_REG    0x01
 #define TSL2591_ID_REG      0x12
 #define TSL2591_CHNLS_REG   0x14
-#define TSL2591_CHNL0_REG   0x14
-#define TSL2591_CHNL1_REG   0x16
 #define TSL2591_ENABLE_REG  0x00
 
 //mysterious
