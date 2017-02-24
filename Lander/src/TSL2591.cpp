@@ -62,23 +62,9 @@ int TSL2591::set(tsl2591_gain gain, tsl2591_integration_time integration) {
 }
 
 int TSL2591::getLux(float *lux) {
-    /*
-    //mine
-    uint32_t buffer[4];
-    readBuffer(TSL2591_ADDR, TSL2591_CHNLS_REG | TSL2591_COMMAND_BIT, (uint8_t*)buffer, 4);
-    uint32_t ch0 = buffer[0] | (buffer[1] << 8);
-    uint32_t ch1 = buffer[2] | (buffer[3] << 8);
-    */
-    //adafruit
-    uint32_t lum;
-    lum = read16(TSL2591_ADDR, TSL2591_COMMAND_BIT | TSL2591_CHNL1_REG);
-    lum <<= 16;
-    lum |= read16(TSL2591_ADDR, TSL2591_COMMAND_BIT | TSL2591_CHNL0_REG);
-    uint16_t ir, full;
-    ir = lum >> 16;
-    full = lum & 0xFFFF;
-    uint32_t ch0 = full;
-    uint32_t ch1 = ir;
+    uint32_t lum = read32(TSL2591_ADDR, TSL2591_CHNLS_REG | TSL2591_COMMAND_BIT);
+    uint32_t ch0 = lum & 0xFF;
+    uint32_t ch1 = lum >> 16;
 
     // Check for overflow conditions first
     if (ch0 == 0xFFFF || ch1 == 0xFFFF) {

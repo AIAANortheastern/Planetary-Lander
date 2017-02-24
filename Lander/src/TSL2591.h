@@ -6,8 +6,6 @@
 #define TSL2591_CTRL_REG    0x01
 #define TSL2591_ID_REG      0x12
 #define TSL2591_CHNLS_REG   0x14
-#define TSL2591_CHNL0_REG   0x14
-#define TSL2591_CHNL1_REG   0x16
 #define TSL2591_ENABLE_REG  0x00
 
 //mysterious
@@ -32,6 +30,16 @@ typedef enum {
     TSL2591_GAIN_9876X = 0x30
 } tsl2591_gain;
 
+
+/*
+ * @note: The TSL has strange behavior with a lot of light
+ * @note: It currently displays as a uint, change to a float
+ * @note: At smaller light intensities, it displays 0.
+ * @note: Consider changing the gain.
+ * @todo: add extra code to handle that behavior in the loop()
+ * @note: It's lit.
+ *
+ **/
 class TSL2591 {
     float atime, again;
     tsl2591_gain _gain;
