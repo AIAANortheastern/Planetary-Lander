@@ -1,0 +1,26 @@
+!_TAG_FILE_FORMAT	1	/original ctags format/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+main	C:/Users/dharris/Desktop/GPS_C/PAM-7Q GPS Demo.c	/^int main()                                    \/\/ Main function$/
+INBUFF_SIZE	C:/Users/dharris/Desktop/GPS_C/Simple_NMEA_Parser.c	13
+byte	C:/Users/dharris/Desktop/GPS_C/Simple_NMEA_Parser.c	/^typedef unsigned char byte;$/
+nmea_data_s	C:/Users/dharris/Desktop/GPS_C/Simple_NMEA_Parser.c	/^typedef struct nmea_data_s$/
+fix	C:/Users/dharris/Desktop/GPS_C/Simple_NMEA_Parser.c	/^  int fix;            \/\/fix quality, 0=invalid, 1=GPS, 2=DGPS, etc...$/
+lat_dds	C:/Users/dharris/Desktop/GPS_C/Simple_NMEA_Parser.c	/^  float lat_dds;      \/\/current latitude in decimal degress$/
+lon_dds	C:/Users/dharris/Desktop/GPS_C/Simple_NMEA_Parser.c	/^  float lon_dds;      \/\/current longitude in decimal degrees$/
+sats_tracked	C:/Users/dharris/Desktop/GPS_C/Simple_NMEA_Parser.c	/^  int sats_tracked;   \/\/current number of satellites tracked by the GPS$/
+altitude	C:/Users/dharris/Desktop/GPS_C/Simple_NMEA_Parser.c	/^  int altitude;       \/\/current altitude, in meters$/
+heading	C:/Users/dharris/Desktop/GPS_C/Simple_NMEA_Parser.c	/^  float heading;      \/\/current direction of travel, in degrees$/
+velocity	C:/Users/dharris/Desktop/GPS_C/Simple_NMEA_Parser.c	/^  float velocity;     \/\/current speed if travel, in knots$/
+date	C:/Users/dharris/Desktop/GPS_C/Simple_NMEA_Parser.c	/^  int date;           \/\/current date, raw format$/
+time	C:/Users/dharris/Desktop/GPS_C/Simple_NMEA_Parser.c	/^  int time;           \/\/current UTC time, raw format$/
+mag_var	C:/Users/dharris/Desktop/GPS_C/Simple_NMEA_Parser.c	/^  int mag_var;        \/\/current magnetic variation$/
+nmea_data	C:/Users/dharris/Desktop/GPS_C/Simple_NMEA_Parser.c	/^} nmea_data;$/
+_gps_rx_pin	C:/Users/dharris/Desktop/GPS_C/Simple_NMEA_Parser.c	/^int _gps_rx_pin, _gps_baud;$/
+_gps_baud	C:/Users/dharris/Desktop/GPS_C/Simple_NMEA_Parser.c	/^int _gps_rx_pin, _gps_baud;$/
+gps_data	C:/Users/dharris/Desktop/GPS_C/Simple_NMEA_Parser.c	/^nmea_data gps_data;$/
+gps_start	C:/Users/dharris/Desktop/GPS_C/Simple_NMEA_Parser.c	/^void gps_start(int gps_rx_pin, int gps_baud)$/
+gps_run	C:/Users/dharris/Desktop/GPS_C/Simple_NMEA_Parser.c	/^void gps_run(void *par)$/

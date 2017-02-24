@@ -1,0 +1,8 @@
+PAM-7Q GPS Demo.c
+>compiler=C
+>memtype=lmm main ram
+>optimize=-Os
+>-m32bit-doubles
+>-fno-exceptions
+>-create_library
+>BOARD::ACTIVITYBOARD
