@@ -42,15 +42,18 @@ before satellite lock may be inaccurate.
 
 */
 
-#include <SoftwareSerial.h>
+
+// RXD connects to TXD on the Teensy
+// TXD connects to RXD on the Teensy
 #include "./TinyGPS.h"                 // Use local version of this library
 
 TinyGPS gps;
-SoftwareSerial nss(6, 255);            // TXD to digital pin 6
 
 void setup() {
   Serial.begin(115200);
-  nss.begin(9600);                     // Communicate at 9600 baud (default for PAM-7Q module)
+  Serial2.begin(9600);                     // Communicate at 9600 baud (default for PAM-7Q module)
+  while (!Serial) {}
+  while (!Serial2) {}
   Serial.println("Reading GPS");
 }
 
@@ -58,10 +61,12 @@ void loop() {
   bool newdata = false;
   unsigned long start = millis();
   while (millis() - start < 5000) {    // Update every 5 seconds
-    if (feedgps())
+    if (feedgps()) {
       newdata = true;
+    }
   }
   if (newdata) {
+    Serial.println("newData");
     gpsdump(gps);
   }
 }
@@ -71,15 +76,17 @@ void gpsdump(TinyGPS &gps) {
   float flat, flon;
   unsigned long age;
   gps.f_get_position(&flat, &flon, &age);
-  Serial.print(flat, 4); Serial.print(", "); 
+  Serial.print(flat, 4);
+  Serial.print(", "); 
   Serial.println(flon, 4);
 }
 
 // Feed data as it becomes available 
 bool feedgps() {
-  while (nss.available()) {
-    if (gps.encode(nss.read()))
+  while (Serial2.available()) {
+    if (gps.encode(Serial2.read())) {
       return true;
+    }
   }
   return false;
 }
