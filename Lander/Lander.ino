@@ -9,15 +9,20 @@
 #include "src/TSL2591.h"
 #include "src/BME280.h"
 #include "src/MPU9250.h"
+#include "src/TinyGPS.h"
 
 TSL2591 tsl = TSL2591();
 BME280 bme = BME280(0x77);//0x76 if SDI grounded, or 0x77 if SDI is attached to logic level
 MPU9250 mpu = MPU9250(0x69);// 0x68 if AD0 is grounded, 0x69 if AD0 is at logic level
+TinyGPS gps;
 
 void setup() {
     Serial.begin(9600);
     while(!Serial){}
     Serial.println("Connected");
+    // Pam7Q
+    Serial2.begin(9600);
+    while(!Serial2) {}
     //I2c
     Wire.begin();
     //TSL2591
@@ -47,7 +52,7 @@ void loop() {
       Serial.println("Error with TSL2591 sensor");
     } else {
         Serial.print("Lux: ");
-        Serial.println((uint32_t)lux);
+        Serial.println(lux);
     }
     //BME280
     if (bme.read_processed(&temp, &pres, &humd) != 0) {
@@ -91,5 +96,41 @@ void loop() {
         Serial.print(", ");
         Serial.println(orientation[3]);
     }
+    //Pam7Q
+    bool newdata = false;
+    unsigned long start = millis();
+    while (millis() - start < 5000) {
+        if (feedgps()) {
+            newdata = true;
+        }
+    }
+    if (newdata) {
+        Serial.print("Pam7Q: ");
+        gpsdump(gps);
+    }
     delay(500);
 }
+
+
+
+// Get and process GPS data
+void gpsdump(TinyGPS &gps) {
+  float flat, flon;
+  unsigned long age;
+  gps.f_get_position(&flat, &flon, &age);
+  Serial.print(flat, 4);
+  Serial.print(", "); 
+  Serial.println(flon, 4);
+}
+
+// Feed data as it becomes available 
+bool feedgps() {
+  while (Serial2.available()) {
+    if (gps.encode(Serial2.read())) {
+      return true;
+    }
+  }
+  return false;
+}
+
+
