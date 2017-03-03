@@ -63,8 +63,8 @@ int TSL2591::set(tsl2591_gain gain, tsl2591_integration_time integration) {
 
 int TSL2591::getLux(float *lux) {
     uint32_t lum = read32(TSL2591_ADDR, TSL2591_CHNLS_REG | TSL2591_COMMAND_BIT);
-    uint32_t ch0 = lum & 0xFF;
-    uint32_t ch1 = lum >> 16;
+    uint32_t ch1 = lum & 0xFF;
+    uint32_t ch0 = lum >> 16;
 
     // Check for overflow conditions first
     if (ch0 == 0xFFFF || ch1 == 0xFFFF) {
