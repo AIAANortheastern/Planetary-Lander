@@ -5,7 +5,8 @@
 int MPU9250::start() {
     if(read8(address, MPU9250_ID_REG) != MPU9250_ID)
         return 1;
-    return mageno.start();
+    return 0;
+    //return mageno.start();
 }
 
 int MPU9250::readAccelometerData(int16_t *output) {

@@ -4,7 +4,8 @@
 
 //Testing Code
 
-#include "Wire.h"
+#include <Wire.h>
+#include <SD.h>
 
 #include "src/TSL2591.h"
 #include "src/BME280.h"
@@ -13,7 +14,7 @@
 
 TSL2591 tsl = TSL2591();
 BME280 bme = BME280(0x77);//0x76 if SDI grounded, or 0x77 if SDI is attached to logic level
-MPU9250 mpu = MPU9250(0x69);// 0x68 if AD0 is grounded, 0x69 if AD0 is at logic level
+MPU9250 mpu = MPU9250(0x68);// 0x68 if AD0 is grounded, 0x69 if AD0 is at logic level
 TinyGPS gps;
 
 void setup() {
@@ -21,26 +22,33 @@ void setup() {
     while(!Serial){}
     Serial.println("Connected");
     // Pam7Q
-    Serial2.begin(9600);
-    while(!Serial2) {}
+    //Serial2.begin(9600);
+    //while(!Serial2) {}
     //I2c
     Wire.begin();
     //TSL2591
-    if(tsl.start(TSL2591_GAIN_1X, TSL2591_INTEGRATION_TIME_100MS) != 0){
+    if(tsl.start(TSL2591_GAIN_1X, TSL2591_INTEGRATION_TIME_100MS)){
       Serial.println("Couldn't connect to TSL2591 sensor");
     }
     //BME280
-    if (bme.start() != 0) {
+    if (bme.start()) {
       Serial.println("Couldn't connect to BME280 sensor");
     }
-    delay(300);
-    while(bme.isReadingCalibration())
-          delay(100);
-    bme.set(BME280_16x_OVERSAMPLING, BME280_16x_OVERSAMPLING, BME280_16x_OVERSAMPLING);
+    else {
+        delay(300);
+        //while(bme.isReadingCalibration()) delay(100);
+        bme.set(BME280_16x_OVERSAMPLING, BME280_16x_OVERSAMPLING, BME280_16x_OVERSAMPLING);
+    }
     //MPU9250
-    if(mpu.start() != 0){
+    if(mpu.start()){
         Serial.println("Couldn't connect to MPU9250 sensor");
     }
+    //SD Card
+    /*
+    if(!SD.begin(BUILTIN_SDCARD)){
+        Serial.println("Couldn't connect to SD card.");
+    }
+    */
 }
 
 void loop() {
@@ -48,14 +56,14 @@ void loop() {
     float lux, orientation[4];
     double temp, pres, humd;
     //TSL2591
-    if(tsl.getLux(&lux) != 0){
+    if(tsl.getLux(&lux)){
       Serial.println("Error with TSL2591 sensor");
     } else {
         Serial.print("Lux: ");
         Serial.println(lux);
     }
     //BME280
-    if (bme.read_processed(&temp, &pres, &humd) != 0) {
+    if (bme.read_processed(&temp, &pres, &humd)) {
       Serial.println("Error with BME280 sensor");
     } else {
         Serial.print("Temperature: ");
@@ -66,7 +74,7 @@ void loop() {
         Serial.println(humd);
     }
     //MPU9250
-    if(!mpu.readGyrometerData(gyro) || !mpu.readAccelometerData(acc) || !mpu.readMagneoometerData(magno) || !mpu.getQuaternion(orientation, gyro, acc, magno)){
+    if(mpu.readGyrometerData(gyro) || mpu.readAccelometerData(acc)){ // || mpu.readMagneoometerData(magno) || mpu.getQuaternion(orientation, gyro, acc, magno)){
         Serial.println("Error with MPU9250 sensor");
     } else {
         Serial.print("Gyrometer: ");
@@ -81,6 +89,7 @@ void loop() {
         Serial.print(acc[1]);
         Serial.print(", ");
         Serial.println(acc[2]);
+        /*
         Serial.print("Magnetometer: ");
         Serial.print(magno[0]);
         Serial.print(", ");
@@ -95,6 +104,7 @@ void loop() {
         Serial.print(orientation[2]);
         Serial.print(", ");
         Serial.println(orientation[3]);
+        */
     }
     //Pam7Q
     bool newdata = false;
@@ -108,6 +118,12 @@ void loop() {
         Serial.print("Pam7Q: ");
         gpsdump(gps);
     }
+    /*
+    File dataFile = SD.open("DATA.TXT", FILE_WRITE);
+    dataFile.print("Test: ");
+    dataFile.println(125);
+    dataFile.close();
+    */
     delay(500);
 }
 
@@ -119,11 +135,11 @@ void gpsdump(TinyGPS &gps) {
   unsigned long age;
   gps.f_get_position(&flat, &flon, &age);
   Serial.print(flat, 4);
-  Serial.print(", "); 
+  Serial.print(", ");
   Serial.println(flon, 4);
 }
 
-// Feed data as it becomes available 
+// Feed data as it becomes available
 bool feedgps() {
   while (Serial2.available()) {
     if (gps.encode(Serial2.read())) {
@@ -132,5 +148,3 @@ bool feedgps() {
   }
   return false;
 }
-
-
