@@ -1,4 +1,4 @@
-//BNO055 - 9DOF
+//MPU9250 - 9DOF
 //TSL2591 - Luminosity
 //BME280 - Temperature, barometric pressure and humidity
 
@@ -22,8 +22,8 @@ void setup() {
     while(!Serial){}
     Serial.println("Connected");
     // Pam7Q
-    //Serial2.begin(9600);
-    //while(!Serial2) {}
+    Serial2.begin(9600);
+    while(!Serial2) {}
     //I2c
     Wire.begin();
     //TSL2591
@@ -36,7 +36,7 @@ void setup() {
     }
     else {
         delay(300);
-        //while(bme.isReadingCalibration()) delay(100);
+        while(bme.isReadingCalibration()) delay(100);
         bme.set(BME280_16x_OVERSAMPLING, BME280_16x_OVERSAMPLING, BME280_16x_OVERSAMPLING);
     }
     //MPU9250
