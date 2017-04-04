@@ -17,6 +17,47 @@ BME280 bme = BME280(0x77);//0x76 if SDI grounded, or 0x77 if SDI is attached to 
 MPU9250 mpu = MPU9250(0x68);// 0x68 if AD0 is grounded, 0x69 if AD0 is at logic level
 TinyGPS gps;
 
+template<class T> String &operator<<(String &lhs, T &rhs) {
+    return lhs += rhs;
+}
+
+template<> String &operator<<(String &lhs, TSL2591 &rhs) {
+    float lux;
+    if (rhs.getLux(&lux)) {
+        lhs << "Error with TSL2591 sensor" << "\n";
+    } else {
+        lhs << "Lux: " << lux << "\n";
+    }
+    return lhs;
+}
+
+template<> String &operator<<(String &lhs, BME280 &rhs) {
+    double temp, pres, humd;
+    if (rhs.read_processed(&temp, &pres, &humd)) {
+        lhs << "Error with BME280 sensor" << "\n";
+    } else {
+        lhs << "Temperature: " << temp << "\n";
+        lhs << "Pressure: " << pres << "\n";
+        lhs << "Humidity: " << humd << "\n";
+    }
+    return lhs;
+}
+
+template<> String &operator<<(String &lhs, MPU9250 &rhs) {
+    int16_t gyro[3], acc[3], magno[3];
+    //float orientation[] = {0.0, 0.0, 0.0, 0.0};
+    if (rhs.readGyrometerData(gyro) || rhs.readAccelometerData(acc) || rhs.readMagneoometerData(magno)){// || rhs.getQuaternion(orientation, gyro, acc, magno)) {
+        lhs << "Error with MPU9250 sensor" << "\n";
+    } else {
+        lhs << "Gyrometer: " << gyro[0] << "," << gyro[1] << "," << gyro[2] << "\n";
+        lhs << "Accelerometer: " << acc[0] << "," << acc[1] << "," << acc[2] << "\n";
+        lhs << "Magnetometer: " << magno[0] << "," << magno[1] << "," << magno[2] << "\n";
+        //lhs << "Orientation: " << orientation[0] << "," << orientation[1] << "," << orientation[2] << "," << orientation[3] << "\n";
+    }
+    return lhs;
+}
+
+
 void setup() {
     Serial.begin(9600);
     while(!Serial){}
@@ -52,60 +93,9 @@ void setup() {
 }
 
 void loop() {
-    int16_t gyro[3], acc[3], magno[3];
-    float lux, orientation[4];
-    double temp, pres, humd;
-    //TSL2591
-    if(tsl.getLux(&lux)){
-      Serial.println("Error with TSL2591 sensor");
-    } else {
-        Serial.print("Lux: ");
-        Serial.println(lux);
-    }
-    //BME280
-    if (bme.read_processed(&temp, &pres, &humd)) {
-      Serial.println("Error with BME280 sensor");
-    } else {
-        Serial.print("Temperature: ");
-        Serial.println(temp);
-        Serial.print("Pressure: ");
-        Serial.println(pres);
-        Serial.print("Humidity: ");
-        Serial.println(humd);
-    }
-    //MPU9250
-    if(mpu.readGyrometerData(gyro) || mpu.readAccelometerData(acc)){ // || mpu.readMagneoometerData(magno) || mpu.getQuaternion(orientation, gyro, acc, magno)){
-        Serial.println("Error with MPU9250 sensor");
-    } else {
-        Serial.print("Gyrometer: ");
-        Serial.print(gyro[0]);
-        Serial.print(", ");
-        Serial.print(gyro[1]);
-        Serial.print(", ");
-        Serial.println(gyro[2]);
-        Serial.print("Accelerometer: ");
-        Serial.print(acc[0]);
-        Serial.print(", ");
-        Serial.print(acc[1]);
-        Serial.print(", ");
-        Serial.println(acc[2]);
-        /*
-        Serial.print("Magnetometer: ");
-        Serial.print(magno[0]);
-        Serial.print(", ");
-        Serial.print(magno[1]);
-        Serial.print(", ");
-        Serial.println(magno[2]);
-        Serial.print("Orientation: ");
-        Serial.print(orientation[0]);
-        Serial.print(", ");
-        Serial.print(orientation[1]);
-        Serial.print(", ");
-        Serial.print(orientation[2]);
-        Serial.print(", ");
-        Serial.println(orientation[3]);
-        */
-    }
+    String data;
+    data << "{\nTSL:" << tsl << ",\nBME:" << bme << "\nMPU:" << mpu << "\n}";
+    Serial.print(data << mpu);
     //Pam7Q
     bool newdata = false;
     unsigned long start = millis();

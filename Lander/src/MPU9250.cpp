@@ -5,8 +5,9 @@
 int MPU9250::start() {
     if(read8(address, MPU9250_ID_REG) != MPU9250_ID)
         return 1;
-    return 0;
-    //return mageno.start();
+    write8(address, MPU9250_INT_PIN_CFG, 0x22);
+    write8(address, MPU9250_INT_ENABLE, 0x01);  // Enable data ready (bit 0) interrupt
+    return mageno.start();
 }
 
 int MPU9250::readAccelometerData(int16_t *output) {
@@ -158,7 +159,7 @@ int AK8963::read(int16_t *output) {
 }
 
 int AK8963::start() {
-    if(read8(address, AK8963_ID_REG) != 0x48)
+    if(read8(address, AK8963_ID_REG) != AK8963_ID)
         return 1;
     write8(address, AK8963_CTRL1_REG, 0x06); // continus measurement mode, 0x02 for 8Hz, 0x06 for 100Hz
     return 0;

@@ -8,6 +8,9 @@
 #define MPU9250_ID_REG 0x75
 #define MPU9250_ID 0x71
 
+#define MPU9250_INT_PIN_CFG 0x37
+#define MPU9250_INT_ENABLE 0x38
+
 #define AK8963_DATA_REG 0x03
 #define AK8963_ID_REG 0x00
 #define AK8963_ID 0x48
