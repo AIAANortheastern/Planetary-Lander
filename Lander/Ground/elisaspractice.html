@@ -1,0 +1,98 @@
+<!doctype>
+<link rel="stylesheet" href="http://code.shutterstock.com/rickshaw/rickshaw.min.css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+<script src="http://code.shutterstock.com/rickshaw/vendor/d3.min.js"></script>
+<script src="http://code.shutterstock.com/rickshaw/vendor/d3.layout.min.js"></script>
+<script src="http://code.shutterstock.com/rickshaw/rickshaw.min.js"></script> 
+
+<style></style>
+<body>
+<!--What formatting conditions will we need to take into consideration if this is a mobile site?-->
+	<h1><i>It's Probably Fine</i></h1>
+	<h2>Planetary Lander 2017</h2>
+	</br>
+	<div style="padding-left:50px;padding-right:50px">
+		<div><h2>GRAPH TITLE</h2></div>
+		<div id="chart" style="border: 5px solid black;"></div>
+	</div>
+</body>
+
+<script>
+//var dataSocket = new WebSocket("...URL...");
+
+// What format should the data be in to be rendered appro???
+var seriesData = [ [], [], [], [], [], [], [], [], [] ];
+var random = new Rickshaw.Fixtures.RandomData(150);
+
+for (var i = 0; i < 150; i++) {
+	random.addData(seriesData);
+}
+console.log(random);
+var graph = new Rickshaw.Graph( {
+        element: document.getElementById("chart"),
+        width: 580,
+        height: 250,
+        renderer: 'line',
+        series: [ {
+                color: 'steelblue',
+                data: seriesData[1]
+        } ]
+} );
+
+graph.render();
+
+var xAxis = new Rickshaw.Graph.Axis.Time({
+    graph: graph,
+	timeFixture: new Rickshaw.Fixtures.Time.Local()
+});
+
+xAxis.render();
+
+var yAxis = new Rickshaw.Graph.Axis.Y({
+    graph: graph
+});
+
+yAxis.render();
+
+var resize = function() {
+	graph.configure({
+		width: window.innerWidth * 0.75,
+		height: window.innerHeight * 0.75
+	});
+	graph.render();
+}
+
+resize();
+
+setInterval( function() {
+	random.addData(seriesData);
+	graph.update();
+
+}, 1000 );
+
+</script>
+<!--
+<script>
+
+var data = [ { x: 1910, y: 92228531 }, { x: 1920, y: 106021568 }, { x: 1930, y: 123202660 }, { x: 1940, y: 132165129 }, { x: 1950, y: 151325798 }, { x: 1960, y: 179323175 }, { x: 1970, y: 203211926 }, { x: 1980, y: 226545805 }, { x: 1990, y: 248709873 }, { x: 2000, y: 281421906 }, { x: 2010, y: 308745538 } ];
+
+var graph = new Rickshaw.Graph( {
+        element: document.getElementById("chart2"),
+        width: 580,
+        height: 250,
+        series: [ {
+                color: 'steelblue',
+                data: data
+        } ]
+} );
+
+graph.render();
+
+var xAxis = new Rickshaw.Graph.Axis.Time({
+    graph: graph
+});
+
+xAxis.render();
+
+</script>
+-->
