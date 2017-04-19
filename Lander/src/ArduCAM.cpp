@@ -131,7 +131,10 @@ ArduCAM::ArduCAM(byte model ,int CS)
 		#if defined(ESP8266)
 		  B_CS = CS;
 		#else
-		  P_CS  = portOutputRegister(digitalPinToPort(CS));
+		  
+		  volatile void* myPtr = portOutputRegister(digitalPinToPort(CS));
+		  P_CS = (volatile uint32_t*)myPtr;
+		  //P_CS  = portOutputRegister(digitalPinToPort(CS));
 		  B_CS  = digitalPinToBitMask(CS);
 		#endif
 	#endif

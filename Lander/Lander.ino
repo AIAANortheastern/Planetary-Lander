@@ -1,3 +1,4 @@
+
 //MPU9250 - 9DOF
 //TSL2591 - Luminosity
 //BME280 - Temperature, barometric pressure and humidity
@@ -11,6 +12,8 @@
 #include "src/BME280.h"
 #include "src/MPU9250.h"
 #include "src/TinyGPS.h"
+#include "src/ArduCAM.h"
+#include "src/fastlz.h"
 
 TSL2591 tsl = TSL2591();
 BME280 bme = BME280(0x77);//0x76 if SDI grounded, or 0x77 if SDI is attached to logic level
