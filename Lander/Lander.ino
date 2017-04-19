@@ -206,6 +206,165 @@ void loop() {
     delay(50);
 }
 
+void myCAMSaveToSDFile(){
+  char str[8];
+  byte buf[256];
+  static int i = 0;
+  static int k = 0;
+  uint8_t byte = 0,byte_last=0;
+  uint32_t length = 0;
+  bool is_header = false;
+  bool print = false;
+  File outFile;
+  //Flush the FIFO
+  myCAM.flush_fifo();
+  //Clear the capture done flag
+  myCAM.clear_fifo_flag();
+  //Start capture
+  myCAM.start_capture();
+  Serial.println(F("start Capture"));
+  while(!myCAM.get_bit(ARDUCHIP_TRIG , CAP_DONE_MASK));
+  Serial.println(F("Capture Done."));  
+  length = myCAM.read_fifo_length();
+  Serial.print(F("The fifo length is :"));
+  Serial.println(length, DEC);
+  if (length >= MAX_FIFO_SIZE) //384K
+  {
+    Serial.println(F("Over size."));
+    return ;
+  }
+  if (length == 0 ) //0 kb
+  {
+    Serial.println(F("Size is 0."));
+    return ;
+  }
+  //Construct a file name
+  k = k + 1;
+  itoa(k, str, 10);
+  strcat(str, ".jpg");
+  //Open the new file
+///////////////////////////////////////////////////////////////
+  //outFile = SD.open(str, O_WRITE | O_CREAT | O_TRUNC);
+  // if(!outFile){
+  //   Serial.println(F("File open faild"));
+  //   return;
+  // }
+///////////////////////////////////////////////////////////////
+
+  myCAM.CS_LOW();
+  myCAM.set_fifo_burst();
+  int num = 1;
+  while ( length-- )
+  {
+    byte_last = byte;
+    byte = SPI.transfer(0x00);
+
+    if ( (byte == 0xD8 && byte_last == 0xFF) || print == true )
+    {
+      print = true;
+      if (byte_last<0x10) {Serial.print("0");}
+      Serial.print(byte_last, HEX);
+      Serial.print(" ");
+      num++;
+
+      if (num % 40 == 0)
+      {
+        //Serial.print(' ');
+        //Serial.print(num);
+        Serial.print("\n");
+      }
+
+      if (byte == 0xD9 && byte_last == 0xFF)
+      {
+        print = false;
+        Serial.print(byte, HEX);
+        Serial.print("\n");
+      }
+    }
+  }
+}
+    //Read JPEG data from FIFO
+//     if ( (temp == 0xD9) && (temp_last == 0xFF) ) //If find the end ,break while,
+//     {
+//       //buf[i++] = temp;  //save the last  0XD9     
+//       //Write the remain bytes in the buffer
+//       myCAM.CS_HIGH();
+
+// //////////////////////////////////////////////////////////////////
+//       //outFile.write(buf, i);  
+//       //Close the file
+//       //outFile.close();
+ 
+//       //Serial.println("Here comes photo data.");
+//       //for (int num=0; num<i; num++)
+//       //{
+//         Serial.print(temp, HEX);
+//         num++;
+//         if (num % 80 == 0)
+//         {
+//           Serial.print("\n");
+//           num = 1;
+//         }
+//       //}
+//       //Serial.print("\nEnd of photo data.\n");
+// //////////////////////////////////////////////////////////////////
+
+//       Serial.println(F("Image save OK."));
+//       is_header = false;
+//       //i = 0;
+//     }  
+//     if (is_header == true)
+//     { 
+//       //Write image data to buffer if not full
+//       //if (i < 256)
+//       //buf[i++] = temp;
+//       //else
+//       //{
+//         //Write 256 bytes image data to file
+//         myCAM.CS_HIGH();
+//         ///////////////////////////////////////////////////
+//         //outFile.write(buf, 256);
+//         //Serial.print("\nStart of header data.\n");
+//         //Serial.write(buf, i);
+//         //Serial.print("\nEnd of header data.\n");
+//         //for (int num=0; num<i; num++)
+//         //{
+//           Serial.print(temp, HEX);
+//           num++;
+//           if (num % 80 == 0)
+//           {
+//            Serial.print("\n");
+//            num = 1;
+//           }
+//         //}
+// ///////////////////////////////////////////////////////
+//         //i = 0;
+//         //buf[i++] = temp;
+//         myCAM.CS_LOW();
+//         myCAM.set_fifo_burst();
+//       }        
+//     //}
+//     else if ((temp == 0xD8) & (temp_last == 0xFF))
+//     {
+//       is_header = true;
+//       //buf[i++] = temp_last;
+//       //buf[i++] = temp;
+//       Serial.print(temp_last, HEX);
+//       num++;
+//       Serial.print(temp, HEX);
+//       num++;
+//       if (num % 80 == 0 )
+//       {
+//         Serial.print("\n");
+//         num = 1;
+//       }   
+//     } 
+//  } 
+//}
+
+
+
+
 
 
 // Get and process GPS data
