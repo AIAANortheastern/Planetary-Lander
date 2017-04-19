@@ -60,31 +60,36 @@ template<> String &operator<<(String &lhs, MPU9250 &rhs) {
 }
 
 void setup(){
-    //On-Board led
-    pinMode(13, OUTPUT);
+
     //SD Card
-    if(!SD.begin(BUILTIN_SDCARD)){
-        //turn on led if failed
-        digitalWrite(13, HIGH);
-        return;
-    }
-    File dataFile = SD.open("log.txt", FILE_WRITE);
+    Serial.begin(9600);
+    while(!Serial) {}
     // Pam7Q
-    /*
+    Serial.print("Begin");
+    Serial1.begin(9600);
+    while(!Serial1) {}
+    Serial.println("After Serial1");
     Serial2.begin(9600);
     while(!Serial2) {}
-     */
+    Serial.println("After Serial2");
+
+    Serial3.begin(9600);
+    while(!Serial3) {}
+    Serial.println("After Serial3");
+  
     //I2c
     Wire.begin();
     //TSL2591
-    /*
+    
     if(tsl.start(TSL2591_GAIN_1X, TSL2591_INTEGRATION_TIME_100MS)){
-        dataFile.println("Couldn't connect to TSL2591 sensor");
+        Serial.println("Couldn't connect to TSL2591 sensor");
     }
-     */
+
+  Serial.println("Pre BME");
+    
     //BME280
     if (bme.start()) {
-        dataFile.println("Couldn't connect to BME280 sensor");
+        Serial.println("Couldn't connect to BME280 sensor");
     }
     else {
         delay(300);
@@ -94,19 +99,18 @@ void setup(){
     }
     //MPU9250
     if(mpu.start()){
-        dataFile.println("Couldn't connect to MPU9250 sensor");
+        Serial.println("Couldn't connect to MPU9250 sensor");
     }
-    dataFile.close();
+
+    Serial.print("Setup");
 }
 
 void loop() {
-    File dataFile = SD.open("log.txt", FILE_WRITE);
     String jsonData;
-    // jsonData << "{TSL:" << tsl << ",BME:" << bme << ",MPU: " << mpu << "}";
-    jsonData << "{BME:" << bme << ",MPU: " << mpu << "}";
-    dataFile.println(jsonData);
+    jsonData << "{TSL:" << tsl << ",BME:" << bme << ",MPU: " << mpu << "}";
+    Serial.println(jsonData);
+    Serial3.println(jsonData);
     //Pam7Q
-    /*
     bool newdata = false;
     unsigned long start = millis();
     while (millis() - start < 5000) {
@@ -116,9 +120,9 @@ void loop() {
     }
     if (newdata) {
         Serial.print("Pam7Q: ");
+        Serial3.print("Pam7Q: ");
         gpsdump(gps);
-    }*/
-    dataFile.close();
+    }
     delay(50);
 }
 
@@ -130,13 +134,18 @@ void gpsdump(TinyGPS &gps) {
   unsigned long age;
   gps.f_get_position(&flat, &flon, &age);
   Serial.print(flat, 4);
-  Serial.print(", ");
+  Serial.print(". ");
   Serial.println(flon, 4);
+  Serial3.print(flat, 4);
+  Serial3.print(", ");
+  Serial3.println(flon, 4);
 }
 
 // Feed data as it becomes available
 bool feedgps() {
   while (Serial2.available()) {
+    //Serial.print("Hi\n");
+    //Serial.print(Serial2.read());
     if (gps.encode(Serial2.read())) {
       return true;
     }
