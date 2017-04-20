@@ -61,7 +61,7 @@ int TSL2591::set(tsl2591_gain gain, tsl2591_integration_time integration) {
     return 0;
 }
 
-int TSL2591::getLux(float *lux) {
+int TSL2591::getLux() {
     uint32_t lum = read32(TSL2591_ADDR, TSL2591_CHNLS_REG | TSL2591_COMMAND_BIT);
     uint32_t ch1 = lum & 0xFF;
     uint32_t ch0 = lum >> 16;
@@ -75,7 +75,7 @@ int TSL2591::getLux(float *lux) {
     float cpl = (atime * again) / TSL2591_LUX_DF;
     float lux1 = ((float) ch0 - (TSL2591_LUX_COEFB * (float) ch1)) / cpl;
     float lux2 = ((TSL2591_LUX_COEFC * (float) ch0) - (TSL2591_LUX_COEFD * (float) ch1)) / cpl;
-    *lux = lux1 > lux2 ? lux1 : lux2;
+    lux = lux1 > lux2 ? lux1 : lux2;
     //or?
     //*lux =   ( (float)ch0 - ( 1.7F * (float)ch1 ) ) / cpl;
     return 0;

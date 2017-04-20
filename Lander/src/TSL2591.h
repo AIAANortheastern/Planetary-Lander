@@ -45,11 +45,12 @@ class TSL2591 {
     tsl2591_gain _gain;
     tsl2591_integration_time _integration;
 public:
+    float lux;
     int start(tsl2591_gain gain, tsl2591_integration_time integration);
     int set(tsl2591_gain gain, tsl2591_integration_time integration);
     int setGain(tsl2591_gain gain) { return set(gain, _integration); }
     int setIntegration(tsl2591_integration_time integration) { return set(_gain, integration); }
-    int getLux(float* lux);
+    int getLux();
     void enable();
     void disable();
 };

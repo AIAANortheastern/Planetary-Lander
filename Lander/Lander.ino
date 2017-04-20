@@ -26,24 +26,22 @@ template<class T> String &operator<<(String &lhs, T &rhs) {
 }
 
 template<> String &operator<<(String &lhs, TSL2591 &rhs) {
-    float lux;
-    if (rhs.getLux(&lux)) {
+    if (rhs.getLux()) {
         lhs << "\"Error with TSL2591 sensor\"";
     } else {
-        lhs << "{\"Lux\":" << lux << "}";
+        lhs << "{\"Lux\":" << rhs.lux << "}";
     }
     return lhs;
 }
 
 template<> String &operator<<(String &lhs, BME280 &rhs) {
-    double temp, pres, humd;
-    if (rhs.read_processed(&temp, &pres, &humd)) {
+    if (rhs.read_processed()) {
         lhs << "\"Error with BME280 sensor\"";
     } else {
         lhs << "{";
-        lhs << "\"Temperature\":" << temp << ",";
-        lhs << "\"Pressure\":" << pres << ",";
-        lhs << "\"Humidity\":" << humd << "}";
+        lhs << "\"Temperature\":" << rhs.temperature << ",";
+        lhs << "\"Pressure\":" << rhs.pressure << ",";
+        lhs << "\"Humidity\":" << rhs.humdity << "}";
     }
     return lhs;
 }
@@ -88,34 +86,37 @@ template<> String &operator<<(String &lhs, MPU9250 &rhs) {
     return lhs;
 }
 
-void setup(){
+template<> String &operator<<(String &lhs, TinyGPS &rhs){
+  float flat, flon;
+  unsigned long age;
+  while(Serial2.available()){
+    if (rhs.encode(Serial2.read())) {
+       rhs.f_get_position(&flat, &flon, &age);
+       lhs << "[" << flat << "," << flon << "]";
+       return lhs;
+    }
+  }
+  lhs << "\"No New Data\"";
+  return lhs;
+}
 
-    //SD Card
+void setup(){
     Serial.begin(9600);
     while(!Serial) {}
     // Pam7Q
     Serial.print("Begin");
     Serial1.begin(9600);
     while(!Serial1) {}
-    Serial.println("After Serial1");
     Serial2.begin(9600);
     while(!Serial2) {}
-    Serial.println("After Serial2");
-
     Serial3.begin(9600);
     while(!Serial3) {}
-    Serial.println("After Serial3");
-  
     //I2c
     Wire.begin();
     //TSL2591
-    
     if(tsl.start(TSL2591_GAIN_1X, TSL2591_INTEGRATION_TIME_100MS)){
         Serial.println("Couldn't connect to TSL2591 sensor");
     }
-
-  Serial.println("Pre BME");
-    
     //BME280
     if (bme.start()) {
         Serial.println("Couldn't connect to BME280 sensor");
@@ -140,54 +141,13 @@ void setup(){
     }
     pinMode(23, INPUT);
     analogReadResolution(10);
-    Serial.print("Setup");
 }
 
 void loop() {
-     float battery = analogRead(23) * 0.01730355;
+    float battery = analogRead(23) * 0.01730355;
     String jsonData;
-    jsonData << "{\"TSL\":" << tsl << ",\"BME\":" << bme << ",\"MPU\": " << mpu << ",\"Battery\":" << battery << "}";
+    jsonData << "{\"TSL\":" << tsl << ",\"BME\":" << bme << ",\"MPU\": " << mpu << ",\"Battery\":" << battery << ",\"GPS\":" << gps << "}";
     Serial.println(jsonData);
     Serial3.println(jsonData);
-    //Pam7Q
-    bool newdata = false;
-    unsigned long start = millis();
-    while (millis() - start < 5000) {
-        if (feedgps()) {
-            newdata = true;
-        }
-    }
-    if (newdata) {
-        Serial.print("Pam7Q: ");
-        Serial3.print("Pam7Q: ");
-        gpsdump(gps);
-    }
     delay(50);
-}
-
-
-
-// Get and process GPS data
-void gpsdump(TinyGPS &gps) {
-  float flat, flon;
-  unsigned long age;
-  gps.f_get_position(&flat, &flon, &age);
-  Serial.print(flat, 4);
-  Serial.print(". ");
-  Serial.println(flon, 4);
-  Serial3.print(flat, 4);
-  Serial3.print(", ");
-  Serial3.println(flon, 4);
-}
-
-// Feed data as it becomes available
-bool feedgps() {
-  while (Serial2.available()) {
-    //Serial.print("Hi\n");
-    //Serial.print(Serial2.read());
-    if (gps.encode(Serial2.read())) {
-      return true;
-    }
-  }
-  return false;
 }

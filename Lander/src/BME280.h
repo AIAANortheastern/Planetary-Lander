@@ -42,11 +42,12 @@ class BME280 {
     int16_t dig_H5;
     int8_t dig_H6;
 public:
+    double temperature, pressure, humidity;
     BME280(uint8_t addr): address(addr){}; //0x76 if SDI grounded, or 0x77 if SDI is attached to logic level
     int start();
     void set(bme280_oversampling temperature, bme280_oversampling pressure, bme280_oversampling humidity);
     int read_unprocessed(int32_t* temperature, int32_t* pressure, int32_t* humditiy);
-    int read_processed(double *temperature, double *pressure, double *humidity);
+    int read_processed();
     int isReadingCalibration();
 };
 #endif //LANDER_BME280_H

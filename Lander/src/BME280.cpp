@@ -56,7 +56,7 @@ int BME280::read_unprocessed(int32_t *temperature, int32_t *pressure, int32_t *h
 }
 
 
-int BME280::read_processed(double *temperature, double *pressure, double *humidity) {
+int BME280::read_processed() {
     int32_t temperature_adc, pressure_adc, humidity_adc, t_fine;
     read_unprocessed(&temperature_adc, &pressure_adc, &humidity_adc);
     //sorry not mine, its the offical code in the datasheet page 23/49
@@ -66,7 +66,7 @@ int BME280::read_processed(double *temperature, double *pressure, double *humidi
     var2 = ((((double) temperature_adc) / 131072.0 - ((double) dig_T1) / 8192.0) *
             (((double) temperature_adc) / 131072.0 - ((double) dig_T1) / 8192.0)) * ((double) dig_T3);
     t_fine = (int32_t) (var1 + var2);
-    *temperature = (var1 + var2) / 5120.0;
+    temperature = (var1 + var2) / 5120.0;
     //process pressure, pressure in Pa
     double p;
     var1 = ((double) t_fine / 2.0) - 64000.0;
@@ -83,7 +83,7 @@ int BME280::read_processed(double *temperature, double *pressure, double *humidi
     var1 = ((double) dig_P9) * p * p / 2147483648.0;
     var2 = p * ((double) dig_P8) / 32768.0;
     p = p + (var1 + var2 + ((double) dig_P7)) / 16.0;
-    *pressure = p;
+    pressure = p;
     //process humidity, humidity in %rH
     double var_H;
     var_H = (((double) t_fine) - 76800.0);
@@ -95,6 +95,6 @@ int BME280::read_processed(double *temperature, double *pressure, double *humidi
         var_H = 100.0;
     else if (var_H < 0.0)
         var_H = 0.0;
-    *humidity = var_H;
+    humidity = var_H;
     return 0;
 }
