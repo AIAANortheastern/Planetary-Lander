@@ -28,9 +28,9 @@ template<class T> String &operator<<(String &lhs, T &rhs) {
 template<> String &operator<<(String &lhs, TSL2591 &rhs) {
     float lux;
     if (rhs.getLux(&lux)) {
-        lhs << "Error with TSL2591 sensor";
+        lhs << "\"Error with TSL2591 sensor\"";
     } else {
-        lhs << "{Lux:" << lux << "}";
+        lhs << "{\"Lux\":" << lux << "}";
     }
     return lhs;
 }
@@ -38,12 +38,12 @@ template<> String &operator<<(String &lhs, TSL2591 &rhs) {
 template<> String &operator<<(String &lhs, BME280 &rhs) {
     double temp, pres, humd;
     if (rhs.read_processed(&temp, &pres, &humd)) {
-        lhs << "Error with BME280 sensor";
+        lhs << "\"Error with BME280 sensor\"";
     } else {
         lhs << "{";
-        lhs << "Temperature:" << temp << ",";
-        lhs << "Pressure:" << pres << ",";
-        lhs << "Humidity:" << humd << "}";
+        lhs << "\"Temperature\":" << temp << ",";
+        lhs << "\"Pressure\":" << pres << ",";
+        lhs << "\"Humidity\":" << humd << "}";
     }
     return lhs;
 }
@@ -78,12 +78,12 @@ template<> String &operator<<(String &lhs, MPU9250 &rhs) {
         rhs.sum = 0;
 
         lhs << "{";
-        lhs << "Gyrometer:[" << rhs.gx << "," << rhs.gy << "," << rhs.gz << "],";
-        lhs << "Accelerometer:[" << 1000*rhs.ax << "," << 1000*rhs.ay << "," << 1000*rhs.az << "],";
-        lhs << "Magnetometer:[" << rhs.mx << "," << rhs.my << "," << rhs.mz << "],";
-        lhs << "Orientation:[" << orientation[0] << "," << orientation[1] << "," << orientation[2] << "," << orientation[3] << "]}";
+        lhs << "\"Gyrometer\":[" << rhs.gx << "," << rhs.gy << "," << rhs.gz << "],";
+        lhs << "\"Accelerometer\":[" << 1000*rhs.ax << "," << 1000*rhs.ay << "," << 1000*rhs.az << "],";
+        lhs << "\"Magnetometer\":[" << rhs.mx << "," << rhs.my << "," << rhs.mz << "],";
+        lhs << "\"Orientation\":[" << orientation[0] << "," << orientation[1] << "," << orientation[2] << "," << orientation[3] << "]}";
     } else {
-        lhs << "Error with MPU9250 sensor";
+        lhs << "\"Error with MPU9250 sensor\"";
     }
     return lhs;
 }
@@ -138,13 +138,15 @@ void setup(){
             mpu.initAK8963(mpu.magCalibration);
         }
     }
-
+    pinMode(23, INPUT);
+    analogReadResolution(10);
     Serial.print("Setup");
 }
 
 void loop() {
+     float battery = analogRead(23) * 0.01730355;
     String jsonData;
-    jsonData << "{TSL:" << tsl << ",BME:" << bme << ",MPU: " << mpu << "}";
+    jsonData << "{\"TSL\":" << tsl << ",\"BME\":" << bme << ",\"MPU\": " << mpu << ",\"Battery\":" << battery << "}";
     Serial.println(jsonData);
     Serial3.println(jsonData);
     //Pam7Q
