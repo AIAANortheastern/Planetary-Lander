@@ -21,6 +21,44 @@ BME280 bme = BME280(0x77);//0x76 if SDI grounded, or 0x77 if SDI is attached to 
 MPU9250 mpu;
 TinyGPS gps;
 
+enum {
+     LANDER_START,
+     LANDER_LAUNCHED,
+     LANDER_LANDED,
+     LANDER_UPRIGHT
+} LANDER_STATE;
+
+#define GND_PRS 1000
+#define REL_PER (0.10 * GND_PRS)
+#define CHECK_AMNT 100
+int checks = 0;
+
+boolean onGround(){
+    double diff = fabs(GND_PRS - bme.pressure);
+    if (diff < REL_PR && checks++ == CHECK_AMT){
+       checks = 0;
+       return true;
+    }
+    return false;
+}
+
+boolean offGround(){
+    double diff = fabs(GND_PRS - bme.pressure);
+    if (diff > REL_PR && checks++ == CHECK_AMT){
+       checks = 0;
+       return true;
+    }
+    return false;
+}
+
+float uprightQuaternion[] = {0, 0, 0, 0};
+
+boolean upright(){
+    float *up = uprightQuaternion, *ort = getQ();;
+    float dot = up[0] * ort[0] + up[1] * ort[1] + up[2] * ort[2] + up[3] * ort[3];
+    return acos(dot) < (M_PI / 6);
+}
+
 template<class T> String &operator<<(String &lhs, T &rhs) {
     return lhs += rhs;
 }
@@ -68,6 +106,7 @@ template<> String &operator<<(String &lhs, MPU9250 &rhs) {
         rhs.mz = (float) rhs.magCount[2] * rhs.mRes * rhs.magCalibration[2] - rhs.magbias[2];
 
         rhs.updateTime();
+        //MadgwickQuaternionUpdate(rhs.ax, rhs.ay, rhs.az, rhs.gx*DEG_TO_RAD, rhs.gy*DEG_TO_RAD, rhs.gz*DEG_TO_RAD, rhs.my, rhs.mx, rhs.mz, rhs.deltat);
         MahonyQuaternionUpdate(rhs.ax, rhs.ay, rhs.az, rhs.gx*DEG_TO_RAD, rhs.gy*DEG_TO_RAD, rhs.gz*DEG_TO_RAD, rhs.my, rhs.mx, rhs.mz, rhs.deltat);
         rhs.delt_t = millis() - rhs.count;
         float *orientation = getQ();
@@ -98,6 +137,10 @@ template<> String &operator<<(String &lhs, TinyGPS &rhs){
   }
   lhs << "\"No New Data\"";
   return lhs;
+}
+
+float battery(){
+      return analogRead(23) * 0.01730355;
 }
 
 void setup(){
@@ -144,10 +187,40 @@ void setup(){
 }
 
 void loop() {
-    float battery = analogRead(23) * 0.01730355;
     String jsonData;
-    jsonData << "{\"TSL\":" << tsl << ",\"BME\":" << bme << ",\"MPU\": " << mpu << ",\"Battery\":" << battery << ",\"GPS\":" << gps << "}";
+    switch(LANDER_STATE){
+      default:
+      case LANDER_START:
+        for(int i=0; i < 20; i++){
+            jsonData << "{\"Time\":" << millis() << ",\"TSL\":" << tsl << ",\"BME\":" << bme << ",\"MPU\": " << mpu << ",\"Battery\":" << battery() << ",\"GPS\":" << gps << "}";
+            delay(50);
+        }
+        if(offGround())
+          LANDER_STATE++;
+      break;
+      case LANDER_LAUNCHED:
+        for(int i=0; i < 20; i++){
+            jsonData << "{\"Time\":" << millis() << ",\"TSL\":" << tsl << ",\"BME\":" << bme << ",\"MPU\": " << mpu << ",\"Battery\":" << battery() << ",\"GPS\":" << gps << "}";
+            delay(50);
+        }
+        if(onGround())
+          LANDER_STATE++;
+      break;
+      case LANDER_LANDED:
+        for(int i=0; i < 20; i++){
+            jsonData << "{\"Time\":" << millis() << ",\"TSL\":" << tsl << ",\"BME\":" << bme << ",\"MPU\": " << mpu << ",\"Battery\":" << battery() << ",\"GPS\":" << gps << "}";
+            if(offGround()){
+                LANDER_STATE++;
+                break;
+            }
+            delay(50);
+         } 
+      break;
+      case LANDER_UPRIGHT:
+        jsonData << "{\"Time\":" << millis() << ",\"TSL\":" << tsl << ",\"BME\":" << bme << ",\"MPU\": " << mpu << ",\"Battery\":" << battery() << ",\"GPS\":" << gps << "}";
+        delay(50);
+      break;
+    }
     Serial.println(jsonData);
     Serial3.println(jsonData);
-    delay(50);
 }
