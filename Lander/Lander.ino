@@ -15,6 +15,7 @@
 #include "src/TinyGPS.h"
 #include "src/ArduCAM.h"
 #include "src/fastlz.h"
+#include "src/quaternionFilters.h"
 
 TSL2591 tsl = TSL2591();
 BME280 bme = BME280(0x77);//0x76 if SDI grounded, or 0x77 if SDI is attached to logic level
@@ -22,10 +23,10 @@ MPU9250 mpu;
 TinyGPS gps;
 
 enum {
-     LANDER_START,
-     LANDER_LAUNCHED,
-     LANDER_LANDED,
-     LANDER_UPRIGHT
+    LANDER_START,
+    LANDER_LAUNCHED,
+    LANDER_LANDED,
+    LANDER_UPRIGHT
 } LANDER_STATE;
 
 #define GND_PRS 1000
@@ -33,28 +34,29 @@ enum {
 #define CHECK_AMNT 100
 int checks = 0;
 
-boolean onGround(){
+boolean onGround() {
     double diff = fabs(GND_PRS - bme.pressure);
-    if (diff < REL_PR && checks++ == CHECK_AMT){
-       checks = 0;
-       return true;
+    if (diff < REL_PER && checks++ == CHECK_AMNT) {
+        checks = 0;
+        return true;
     }
     return false;
 }
 
-boolean offGround(){
+boolean offGround() {
     double diff = fabs(GND_PRS - bme.pressure);
-    if (diff > REL_PR && checks++ == CHECK_AMT){
-       checks = 0;
-       return true;
+    if (diff > REL_PER && checks++ == CHECK_AMNT) {
+        checks = 0;
+        return true;
     }
     return false;
 }
 
 float uprightQuaternion[] = {0, 0, 0, 0};
 
-boolean upright(){
-    float *up = uprightQuaternion, *ort = getQ();;
+boolean upright() {
+    float *up = uprightQuaternion;
+    const float *ort = getQ();
     float dot = up[0] * ort[0] + up[1] * ort[1] + up[2] * ort[2] + up[3] * ort[3];
     return acos(dot) < (M_PI / 6);
 }
@@ -79,7 +81,7 @@ template<> String &operator<<(String &lhs, BME280 &rhs) {
         lhs << "{";
         lhs << "\"Temperature\":" << rhs.temperature << ",";
         lhs << "\"Pressure\":" << rhs.pressure << ",";
-        lhs << "\"Humidity\":" << rhs.humdity << "}";
+        lhs << "\"Humidity\":" << rhs.humidity << "}";
     }
     return lhs;
 }
@@ -107,76 +109,77 @@ template<> String &operator<<(String &lhs, MPU9250 &rhs) {
 
         rhs.updateTime();
         //MadgwickQuaternionUpdate(rhs.ax, rhs.ay, rhs.az, rhs.gx*DEG_TO_RAD, rhs.gy*DEG_TO_RAD, rhs.gz*DEG_TO_RAD, rhs.my, rhs.mx, rhs.mz, rhs.deltat);
-        MahonyQuaternionUpdate(rhs.ax, rhs.ay, rhs.az, rhs.gx*DEG_TO_RAD, rhs.gy*DEG_TO_RAD, rhs.gz*DEG_TO_RAD, rhs.my, rhs.mx, rhs.mz, rhs.deltat);
+        MahonyQuaternionUpdate(rhs.ax, rhs.ay, rhs.az, rhs.gx * DEG_TO_RAD, rhs.gy * DEG_TO_RAD, rhs.gz * DEG_TO_RAD,
+                               rhs.my, rhs.mx, rhs.mz, rhs.deltat);
         rhs.delt_t = millis() - rhs.count;
-        float *orientation = getQ();
+        const float *orientation = getQ();
         rhs.count = millis();
         rhs.sumCount = 0;
         rhs.sum = 0;
 
         lhs << "{";
         lhs << "\"Gyrometer\":[" << rhs.gx << "," << rhs.gy << "," << rhs.gz << "],";
-        lhs << "\"Accelerometer\":[" << 1000*rhs.ax << "," << 1000*rhs.ay << "," << 1000*rhs.az << "],";
+        lhs << "\"Accelerometer\":[" << rhs.ax << "," << rhs.ay << "," << rhs.az << "],";
         lhs << "\"Magnetometer\":[" << rhs.mx << "," << rhs.my << "," << rhs.mz << "],";
-        lhs << "\"Orientation\":[" << orientation[0] << "," << orientation[1] << "," << orientation[2] << "," << orientation[3] << "]}";
+        lhs << "\"Orientation\":[" << orientation[0] << "," << orientation[1] << "," << orientation[2] << ","
+            << orientation[3] << "]}";
     } else {
         lhs << "\"Error with MPU9250 sensor\"";
     }
     return lhs;
 }
 
-template<> String &operator<<(String &lhs, TinyGPS &rhs){
-  float flat, flon;
-  unsigned long age;
-  while(Serial2.available()){
-    if (rhs.encode(Serial2.read())) {
-       rhs.f_get_position(&flat, &flon, &age);
-       lhs << "[" << flat << "," << flon << "]";
-       return lhs;
+template<> String &operator<<(String &lhs, TinyGPS &rhs) {
+    float flat, flon;
+    unsigned long age;
+    while (Serial2.available()) {
+        if (rhs.encode(Serial2.read())) {
+            rhs.f_get_position(&flat, &flon, &age);
+            lhs << "[" << flat << "," << flon << "]";
+            return lhs;
+        }
     }
-  }
-  lhs << "\"No New Data\"";
-  return lhs;
+    lhs << "\"No New Data\"";
+    return lhs;
 }
 
-float battery(){
-      return analogRead(23) * 0.01730355;
+float battery() {
+    return analogRead(23) * 0.01730355;
 }
 
-void setup(){
+void setup() {
     Serial.begin(9600);
-    while(!Serial) {}
+    while (!Serial) {}
     // Pam7Q
     Serial.print("Begin");
     Serial1.begin(9600);
-    while(!Serial1) {}
+    while (!Serial1) {}
     Serial2.begin(9600);
-    while(!Serial2) {}
+    while (!Serial2) {}
     Serial3.begin(9600);
-    while(!Serial3) {}
+    while (!Serial3) {}
     //I2c
     Wire.begin();
     //TSL2591
-    if(tsl.start(TSL2591_GAIN_1X, TSL2591_INTEGRATION_TIME_100MS)){
+    if (tsl.start(TSL2591_GAIN_1X, TSL2591_INTEGRATION_TIME_100MS)) {
         Serial.println("Couldn't connect to TSL2591 sensor");
     }
     //BME280
     if (bme.start()) {
         Serial.println("Couldn't connect to BME280 sensor");
-    }
-    else {
+    } else {
         delay(300);
         int i = 0;
-        while(bme.isReadingCalibration() && i++ < 100) delay(100);
+        while (bme.isReadingCalibration() && i++ < 100) delay(100);
         bme.set(BME280_16x_OVERSAMPLING, BME280_16x_OVERSAMPLING, BME280_16x_OVERSAMPLING);
     }
     //MPU9250
-    if(read8(MPU9250_ADDRESS, WHO_AM_I_MPU9250) != 0x71){
+    if (read8(MPU9250_ADDRESS, WHO_AM_I_MPU9250) != 0x71) {
         Serial.println("Couldn't connect to MPU9250 sensor");
     } else {
         mpu.calibrateMPU9250(mpu.gyroBias, mpu.accelBias);
         mpu.initMPU9250();
-        if(read8(AK8963_ADDRESS, WHO_AM_I_AK8963) != 0x48){
+        if (read8(AK8963_ADDRESS, WHO_AM_I_AK8963) != 0x48) {
             Serial.println("Couldn't connect to AK8963 sensor");
         } else {
             mpu.initAK8963(mpu.magCalibration);
@@ -188,38 +191,32 @@ void setup(){
 
 void loop() {
     String jsonData;
-    switch(LANDER_STATE){
-      default:
-      case LANDER_START:
-        for(int i=0; i < 20; i++){
-            jsonData << "{\"Time\":" << millis() << ",\"TSL\":" << tsl << ",\"BME\":" << bme << ",\"MPU\": " << mpu << ",\"Battery\":" << battery() << ",\"GPS\":" << gps << "}";
-            delay(50);
-        }
-        if(offGround())
-          LANDER_STATE++;
-      break;
-      case LANDER_LAUNCHED:
-        for(int i=0; i < 20; i++){
-            jsonData << "{\"Time\":" << millis() << ",\"TSL\":" << tsl << ",\"BME\":" << bme << ",\"MPU\": " << mpu << ",\"Battery\":" << battery() << ",\"GPS\":" << gps << "}";
-            delay(50);
-        }
-        if(onGround())
-          LANDER_STATE++;
-      break;
-      case LANDER_LANDED:
-        for(int i=0; i < 20; i++){
-            jsonData << "{\"Time\":" << millis() << ",\"TSL\":" << tsl << ",\"BME\":" << bme << ",\"MPU\": " << mpu << ",\"Battery\":" << battery() << ",\"GPS\":" << gps << "}";
-            if(offGround()){
-                LANDER_STATE++;
+    int mtime;
+    float bat;
+    if (LANDER_STATE < LANDER_UPRIGHT) {
+        jsonData << "[";
+        for (int i = 0; i < 20; i++) {
+            mtime = millis();
+            bat = battery();
+            jsonData << "{\"Time\":" << mtime << ",\"TSL\":" << tsl << ",\"BME\":" << bme << ",\"MPU\": " << mpu
+                     << ",\"Battery\":" << bat << ",\"GPS\":" << gps << "},";
+            if (LANDER_STATE == LANDER_LANDED && upright()) {
+                LANDER_STATE = LANDER_UPRIGHT;
                 break;
             }
             delay(50);
-         } 
-      break;
-      case LANDER_UPRIGHT:
-        jsonData << "{\"Time\":" << millis() << ",\"TSL\":" << tsl << ",\"BME\":" << bme << ",\"MPU\": " << mpu << ",\"Battery\":" << battery() << ",\"GPS\":" << gps << "}";
-        delay(50);
-      break;
+        }
+        jsonData << "]";
+        if (LANDER_STATE == LANDER_START && offGround())
+            LANDER_STATE = LANDER_LAUNCHED;
+        else if (LANDER_STATE == LANDER_LAUNCHED && onGround())
+            LANDER_STATE = LANDER_LANDED;
+    } else {
+        mtime = millis();
+        bat = battery();
+        jsonData << "{\"Time\":" << mtime << ",\"TSL\":" << tsl << ",\"BME\":" << bme << ",\"MPU\": " << mpu
+                 << ",\"Battery\":" << bat << ",\"GPS\":" << gps << "}";
+        delay(1000);
     }
     Serial.println(jsonData);
     Serial3.println(jsonData);
