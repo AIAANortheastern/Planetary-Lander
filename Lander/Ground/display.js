@@ -3,10 +3,10 @@ var seriesData = [ [], [], [], [], [], [], [], [], [] ];
 var graphs = [ ];
 var xAxes = [ ];
 var yAxes = [ ];
-var ids = ["chart", "chart2", "chart3" /* ... */];
-var palette = new Rickshaw.Color.Palette( { scheme: 'classic9' } );
+var ids = ["chart1", "chart2", "chart3", "chart4", "chart5", "chart6","chart7", "chart8", "chart9", "chart10", "chart11", "chart12", "chart13", "chart14","chart15"  /* ... */];
+var palette = new Rickshaw.Color.Palette( { scheme: 'cool', interpolatedStopCount: 2 } );
 
-function renderGraph(graph, xAxis, yAxis, plotSet, id){
+function renderGraph(plotSet, id){
     var graph = new Rickshaw.Graph( {
             element: document.getElementById(id),
             renderer: 'line',
@@ -28,6 +28,8 @@ function renderGraph(graph, xAxis, yAxis, plotSet, id){
     });
     yAxis.render();
     yAxes.push(yAxes);
+
+    d3.select(id).append("text").text("sdlfjsldgkfsdjfksldkfjldkjsfg");
 }
 
 //if you want to send data about direction
@@ -66,14 +68,14 @@ for (var i = 0; i < 150; i++) {
 
 console.log(seriesData);
 
-for(var i=0; i<3; i++){
-    renderGraph(graphs[i], xAxes[i], yAxes[i], seriesData[i], ids[i]);
+for(var i=0; i<ids.length; i++){
+    renderGraph(seriesData[1], ids[i]);
 }
 
+document.getElementById("json-image").src = "dog2.jpg";
 setInterval( function() {
     random.addData(seriesData);
-    for(var i=0; i<3; i++){
+    for(var i=0; i<9/*graphs.length*/; i++){
         graphs[i].update();
     }
 }, 1000 );
-
