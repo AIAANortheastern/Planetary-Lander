@@ -1,4 +1,3 @@
-
 //MPU9250 - 9DOF
 //TSL2591 - Luminosity
 //BME280 - Temperature, barometric pressure and humidity
@@ -7,6 +6,7 @@
 
 #include <Wire.h>
 #include <SD.h>
+#include <Servo.h>
 
 #include "src/i2c.h"
 #include "src/TSL2591.h"
@@ -17,10 +17,14 @@
 #include "src/fastlz.h"
 #include "src/quaternionFilters.h"
 
+#define SerialGPS Serial4
+#define SerialXBee Serial3
+
 TSL2591 tsl = TSL2591();
 BME280 bme = BME280(0x77);//0x76 if SDI grounded, or 0x77 if SDI is attached to logic level
 MPU9250 mpu;
 TinyGPS gps;
+Servo spinServo, flipServo;
 
 enum {
     LANDER_START,
@@ -29,15 +33,14 @@ enum {
     LANDER_UPRIGHT
 } LANDER_STATE;
 
-#define GND_PRS 1000
-#define REL_PER (0.10 * GND_PRS)
+#define GND_PRS 101250
+#define GND_DIFF 700
 #define CHECK_AMNT 100
-int checks = 0;
+int checks = 0, checks2 = 0;
 
 boolean onGround() {
     double diff = fabs(GND_PRS - bme.pressure);
-    if (diff < REL_PER && checks++ == CHECK_AMNT) {
-        checks = 0;
+    if (diff < GND_DIFF && checks++ == CHECK_AMNT) {
         return true;
     }
     return false;
@@ -45,8 +48,7 @@ boolean onGround() {
 
 boolean offGround() {
     double diff = fabs(GND_PRS - bme.pressure);
-    if (diff > REL_PER && checks++ == CHECK_AMNT) {
-        checks = 0;
+    if (diff > GND_DIFF && checks2++ == CHECK_AMNT) {
         return true;
     }
     return false;
@@ -132,8 +134,8 @@ template<> String &operator<<(String &lhs, MPU9250 &rhs) {
 template<> String &operator<<(String &lhs, TinyGPS &rhs) {
     float flat, flon;
     unsigned long age;
-    while (Serial2.available()) {
-        if (rhs.encode(Serial2.read())) {
+    while (SerialGPS.available()) {
+        if (rhs.encode(SerialGPS.read())) {
             rhs.f_get_position(&flat, &flon, &age);
             lhs << "[" << flat << "," << flon << "]";
             return lhs;
@@ -148,25 +150,28 @@ float battery() {
 }
 
 void setup() {
+    File dataFile = SD.open("run.txt", FILE_WRITE);
     Serial.begin(9600);
     while (!Serial) {}
-    // Pam7Q
     Serial.print("Begin");
-    Serial1.begin(9600);
-    while (!Serial1) {}
-    Serial2.begin(9600);
-    while (!Serial2) {}
-    Serial3.begin(9600);
-    while (!Serial3) {}
+    // Pam7Q
+    SerialGPS.begin(9600);
+    while (!SerialGPS) {}
+    SerialXBee.begin(9600);
+    while (!SerialXBee) {}
     //I2c
     Wire.begin();
     //TSL2591
     if (tsl.start(TSL2591_GAIN_1X, TSL2591_INTEGRATION_TIME_100MS)) {
-        Serial.println("Couldn't connect to TSL2591 sensor");
+        Serial.println("\"Couldn't connect to TSL2591 sensor\"");
+        SerialXBee.println("\"Couldn't connect to TSL2591 sensor\"");
+        dataFile.println("\"Couldn't connect to TSL2591 sensor\"");
     }
     //BME280
     if (bme.start()) {
-        Serial.println("Couldn't connect to BME280 sensor");
+        Serial.println("\"Couldn't connect to BME280 sensor\"");
+        SerialXBee.println("\"Couldn't connect to BME280 sensor\"");
+        dataFile.println("\"Couldn't connect to BME280 sensor\"");
     } else {
         delay(300);
         int i = 0;
@@ -175,18 +180,27 @@ void setup() {
     }
     //MPU9250
     if (read8(MPU9250_ADDRESS, WHO_AM_I_MPU9250) != 0x71) {
-        Serial.println("Couldn't connect to MPU9250 sensor");
+        Serial.println("\"Couldn't connect to MPU9250 sensor\"");
+        SerialXBee.println("\"Couldn't connect to MPU9250 sensor\"");
+        dataFile.println("\"Couldn't connect to MPU9250 sensor\"");
     } else {
         mpu.calibrateMPU9250(mpu.gyroBias, mpu.accelBias);
         mpu.initMPU9250();
         if (read8(AK8963_ADDRESS, WHO_AM_I_AK8963) != 0x48) {
-            Serial.println("Couldn't connect to AK8963 sensor");
+            Serial.println("\"Couldn't connect to AK8963 sensor\"");
+            SerialXBee.println("\"Couldn't connect to AK8963 sensor\"");
+            dataFile.println("\"Couldn't connect to AK8963 sensor\"");
         } else {
             mpu.initAK8963(mpu.magCalibration);
         }
     }
+    //Battery
     pinMode(23, INPUT);
     analogReadResolution(10);
+    //Servos
+    spinServo.attach(2);
+    flipServo.attach(4);
+    dataFile.close();
 }
 
 void loop() {
@@ -200,17 +214,21 @@ void loop() {
             bat = battery();
             jsonData << "{\"Time\":" << mtime << ",\"TSL\":" << tsl << ",\"BME\":" << bme << ",\"MPU\": " << mpu
                      << ",\"Battery\":" << bat << ",\"GPS\":" << gps << "},";
-            if (LANDER_STATE == LANDER_LANDED && upright()) {
+            if (LANDER_STATE == LANDER_START && offGround()){
+                LANDER_STATE = LANDER_LAUNCHED;
+                break;
+            }
+            else if (LANDER_STATE == LANDER_LAUNCHED && onGround()){
+                LANDER_STATE = LANDER_LANDED;
+                break;
+            }
+            else if (LANDER_STATE == LANDER_LANDED && upright()) {
                 LANDER_STATE = LANDER_UPRIGHT;
                 break;
             }
             delay(50);
         }
         jsonData << "]";
-        if (LANDER_STATE == LANDER_START && offGround())
-            LANDER_STATE = LANDER_LAUNCHED;
-        else if (LANDER_STATE == LANDER_LAUNCHED && onGround())
-            LANDER_STATE = LANDER_LANDED;
     } else {
         mtime = millis();
         bat = battery();
@@ -218,6 +236,9 @@ void loop() {
                  << ",\"Battery\":" << bat << ",\"GPS\":" << gps << "}";
         delay(1000);
     }
+    File dataFile = SD.open("run.txt", FILE_WRITE);
     Serial.println(jsonData);
-    Serial3.println(jsonData);
+    SerialXBee.println(jsonData);
+    dataFile.println(jsonData);
+    dataFile.close();
 }
