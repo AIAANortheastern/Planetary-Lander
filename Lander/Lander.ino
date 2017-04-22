@@ -197,8 +197,8 @@ void setup() {
     pinMode(23, INPUT);
     analogReadResolution(10);
     //Servos
-    spinServo.attach(2);
-    flipServo.attach(4);
+    spinServo.attach(4);
+    flipServo.attach(2);
     dataFile.close();
 }
 
@@ -210,7 +210,7 @@ void loop() {
         jsonData << "[";
         for (int i = 0; i < 20; i++) {
             if (LANDER_STATE == LANDER_LANDED){
-                flipServo.write(120);
+                flipServo.write(145);
             }
             mtime = millis();
             bat = battery();
@@ -228,11 +228,11 @@ void loop() {
                 LANDER_STATE = LANDER_UPRIGHT;
                 break;
             }
-            delay(50);
+            delay(45);
         }
         jsonData << "]";
         if (LANDER_STATE == LANDER_LANDED){
-            flipServo.write(90);
+            flipServo.write(92);
             delay(10);
         }
     } else {
