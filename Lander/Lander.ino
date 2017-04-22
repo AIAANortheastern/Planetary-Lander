@@ -153,7 +153,6 @@ void setup() {
     File dataFile = SD.open("run.txt", FILE_WRITE);
     Serial.begin(9600);
     while (!Serial) {}
-    Serial.print("Begin");
     // Pam7Q
     SerialGPS.begin(9600);
     while (!SerialGPS) {}
@@ -210,6 +209,9 @@ void loop() {
     if (LANDER_STATE < LANDER_UPRIGHT) {
         jsonData << "[";
         for (int i = 0; i < 20; i++) {
+            if (LANDER_STATE == LANDER_LANDED){
+                flipServo.write(120);
+            }
             mtime = millis();
             bat = battery();
             jsonData << "{\"Time\":" << mtime << ",\"TSL\":" << tsl << ",\"BME\":" << bme << ",\"MPU\": " << mpu
@@ -229,6 +231,10 @@ void loop() {
             delay(50);
         }
         jsonData << "]";
+        if (LANDER_STATE == LANDER_LANDED){
+            flipServo.write(90);
+            delay(10);
+        }
     } else {
         mtime = millis();
         bat = battery();
