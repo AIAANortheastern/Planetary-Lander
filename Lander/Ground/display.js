@@ -29,77 +29,114 @@ function renderGraph(plotSet, id){
     yAxis.render();
     yAxes.push(yAxes);
 
-    d3.select(id).append("text").text("sdlfjsldgkfsdjfksldkfjldkjsfg");
+    //d3.select(id).append("text").text("sdlfjsldgkfsdjfksldkfjldkjsfg");
 }
 
 //if you want to send data about direction
 //buttons would need to be added
 //dataSocket.send("LEFT/RIGHT");
 
-//initialize graphs with initial data
-//initial data needs to be sent in data format: 
-// data = {"panorama": "...IMAGE FILE...", "image": "...IMAGE FILE...", 
-// "initialdata": [ [ {x: ..., y: ...}, {x: ..., y: ...}, ...], // y is temperature
-// [ {x: ..., y: ...}, {x: ..., y: ...}, ...], // y is humidity
-// [ {x: ..., y: ...}, {x: ..., y: ...}, ...], // y is light intensity
-// [ {x: ..., y: ...}, {x: ..., y: ...}, ...], // y is voltage
-// [ {x: ..., y: ...}, {x: ..., y: ...}, ...], // y is gps lattitude
-// [ {x: ..., y: ...}, {x: ..., y: ...}, ...], // y is gps longitude
-// [ {x: ..., y: ...}, {x: ..., y: ...}, ...], // y is acceleration x
-// [ {x: ..., y: ...}, {x: ..., y: ...}, ...], // y is acceleration y
-// [ {x: ..., y: ...}, {x: ..., y: ...}, ...], // y is acceleration z
-// [ {x: ..., y: ...}, {x: ..., y: ...}, ...], // y is gyro x
-// [ {x: ..., y: ...}, {x: ..., y: ...}, ...], // y is gyro y
-// [ {x: ..., y: ...}, {x: ..., y: ...}, ...], // y is gyro z
-// [ {x: ..., y: ...}, {x: ..., y: ...}, ...], // y is mag x
-// [ {x: ..., y: ...}, {x: ..., y: ...}, ...], // y is mag y
-// [ {x: ..., y: ...}, {x: ..., y: ...}, ...] ]} // y is mag z
+//initial data needs to be sent in data format:  
+// data = {"panorama": "...IMAGE FILE...", "image": "...IMAGE FILE...", "Packet Count" : ,
+// "Temperature": {x: ..., y: ...}, "Humidity": {x: ..., y: ...}, 
+// "Light": {x: ..., y: ...}, "Voltage": {x: ..., y: ...}, "Lattitude": {x: ..., y: ...},
+// "Longitude": {x: ..., y: ...}, "Ax": {x: ..., y: ...}, "Ay": {x: ..., y: ...},
+// "Az": {x: ..., y: ...}, "Gx": {x: ..., y: ...}, "Gy": {x: ..., y: ...},
+// "Gz": {x: ..., y: ...}, "Mx": {x: ..., y: ...}, "My": {x: ..., y: ...}, "Mz": {x: ..., y: ...}
+// } 
 // x is time in seconds
 
-/*
+
 dataSocket.onopen = function (event) {
-    var data = JSON.parse(event.data);
-    for(var i=0; i<Object.keys(data).length; i++){
-        seriesData[i] = event.data.initialdata[i];
-        renderGraph(graphs[i], xAxes[i], yAxes[i], seriesData[i]);
-    }
-    document.getElementById("json-image").src = event.data.image;
-    document.getElementById("panorama").src = event.data.panorama;
 };
-*/
 
-// update graphs with incoming data
-// updated data needs to be send in data format: 
-// data = { "image": "...IMAGE FILE...", 
-// "updateddata": [ {x: ..., y: ...}, // y is temperature
-// {x: ..., y: ...}, // y is humidity
-// {x: ..., y: ...}, // y is light intensity
-// {x: ..., y: ...}, // y is voltage
-// {x: ..., y: ...}, // y is gps lattitude
-// {x: ..., y: ...}, // y is gps longitude
-// {x: ..., y: ...}, // y is acceleration x
-// {x: ..., y: ...}, // y is acceleration y
-// {x: ..., y: ...}, // y is acceleration z
-// {x: ..., y: ...}, // y is gyro x
-// {x: ..., y: ...}, // y is gyro y
-// {x: ..., y: ...}, // y is gyro z
-// {x: ..., y: ...}, // y is mag x
-// {x: ..., y: ...}, // y is mag y
-// {x: ..., y: ...} ]} // y is mag z
-// x is time in seconds
+dataSocket.onmessage = function(event) {
+    var data = JSON.parse(event.data);
+
+    // if the graphs haven't been rendered yet: 
+    if(graphs.length == 0){
+        // add first data point to array
+        if("Temperature" in event.data)
+            seriesData[0][0] = data.Temperature;
+        if("Humidity" in event.data)
+            seriesData[1][0] = data.Humidity;
+        if("Light" in event.data)
+            seriesData[2][0] = data.Light;
+        if("Voltage" in event.data)
+            seriesData[3][0] = data.Voltage;
+        if("Lattitude" in event.data)
+            seriesData[4][0] = data.Lattitude;
+        if("Longitude" in event.data)
+            seriesData[5][0] = data.Longitude;
+        if("Ax" in event.data)
+            seriesData[6][0] = data.Ax;
+        if("Ay" in event.data)
+            seriesData[7][0] = data.Ay;
+        if("Az" in event.data)
+            seriesData[8][0] = data.Az;
+        if("Gx" in event.data)
+            seriesData[9][0] = data.Gx;
+        if("Gy" in event.data)
+            seriesData[10][0] = data.Gy;
+        if("Gz" in event.data)
+            seriesData[11][0] = data.Gz;
+        if("Mx" in event.data)
+        seriesData[12][0] = data.Mx;
+        if("My" in event.data)
+            seriesData[13][0] = data.My;
+        if("Mz" in event.data)
+            seriesData[14][0] = data.Mz;
+
+        // initialize graphs
+        for(int i=0; i<ids.length; i++)
+        {
+            renderGraph(graphs[i], xAxes[i], yAxes[i], seriesdata[i]);
+        }
+    }
+    else {
+        if("Temperature" in event.data)
+            seriesData[0].push(data.Temperature);
+        if("Humidity" in event.data)
+            seriesData[1].push(data.Humidity);
+        if("Light" in event.data)
+            seriesData[2].push(data.Light);
+        if("Voltage" in event.data)
+            seriesData[3].push(data.Voltage);
+        if("Lattitude" in event.data)
+            seriesData[4].push(data.Lattitude);
+        if("Longitude" in event.data)
+            seriesData[5].push(data.Longitude);
+        if("Ax" in event.data)
+            seriesData[6].push(data.Ax);
+        if("Ay" in event.data)
+            seriesData[7].push(data.Ay);
+        if("Az" in event.data)
+            seriesData[8].push(data.Az);
+        if("Gx" in event.data)
+            seriesData[9].push(data.Gx);
+        if("Gy" in event.data)
+            seriesData[10].push(data.Gy);
+        if("Gz" in event.data)
+            seriesData[11].push(data.Gz);
+        if("Mx" in event.data)
+            seriesData[12].push(data.Mx);
+        if("My" in event.data)
+            seriesData[13].push(data.My);
+        if("Mz" in event.data)
+            seriesData[14].push(data.Mz);
+
+        for(var i=0; i<ids.length; i++){
+            graphs[i].update();
+        }
+    }
+
+    document.getElementById("packetsreceived").textContent = "Packet Count=" + event.data['Packet Count'];
+    //document.getElementById("json-image").src = event.data.image;
+    //document.getElementById("panorama").src = event.data.panorama;
+}
+
 
 /*
-dataSocket.onmessage = function(event) {
-    var newData = JSON.parse(event.data);
-    // var time = new Date(msg.date);
-    for(var i=0; i<Object.keys(data).length; i++){
-        seriesData[i].push(event.data.updateddata[i]);
-        graph[i].update();
-    }
-    document.getElementById("json-image").src = event.data.image;
-};
-*/
-
 // FOR TESTING ONLY:
 var random = new Rickshaw.Fixtures.RandomData(150);
 
@@ -116,7 +153,10 @@ for(var i=0; i<ids.length; i++){
 document.getElementById("json-image").src = "dog2.jpg";
 setInterval( function() {
     random.addData(seriesData);
-    for(var i=0; i<9/*graphs.length*/; i++){
+    for(var i=0; i<9; i++){
         graphs[i].update();
     }
 }, 1000 );
+
+document.getElementById("packetsreceived").textContent = 55;
+*/
