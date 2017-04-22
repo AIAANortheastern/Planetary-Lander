@@ -1,4 +1,4 @@
-//var dataSocket = new WebSocket("...URL...");
+//var dataSocket = new WebSocket("localhost");
 var seriesData = [ [], [], [], [], [], [], [], [], [] ];
 var graphs = [ ];
 var xAxes = [ ];
@@ -37,29 +37,70 @@ function renderGraph(plotSet, id){
 //dataSocket.send("LEFT/RIGHT");
 
 //initialize graphs with initial data
+//initial data needs to be sent in data format: 
+// data = {"panorama": "...IMAGE FILE...", "image": "...IMAGE FILE...", 
+// "initialdata": [ [ {x: ..., y: ...}, {x: ..., y: ...}, ...], // y is temperature
+// [ {x: ..., y: ...}, {x: ..., y: ...}, ...], // y is humidity
+// [ {x: ..., y: ...}, {x: ..., y: ...}, ...], // y is light intensity
+// [ {x: ..., y: ...}, {x: ..., y: ...}, ...], // y is voltage
+// [ {x: ..., y: ...}, {x: ..., y: ...}, ...], // y is gps lattitude
+// [ {x: ..., y: ...}, {x: ..., y: ...}, ...], // y is gps longitude
+// [ {x: ..., y: ...}, {x: ..., y: ...}, ...], // y is acceleration x
+// [ {x: ..., y: ...}, {x: ..., y: ...}, ...], // y is acceleration y
+// [ {x: ..., y: ...}, {x: ..., y: ...}, ...], // y is acceleration z
+// [ {x: ..., y: ...}, {x: ..., y: ...}, ...], // y is gyro x
+// [ {x: ..., y: ...}, {x: ..., y: ...}, ...], // y is gyro y
+// [ {x: ..., y: ...}, {x: ..., y: ...}, ...], // y is gyro z
+// [ {x: ..., y: ...}, {x: ..., y: ...}, ...], // y is mag x
+// [ {x: ..., y: ...}, {x: ..., y: ...}, ...], // y is mag y
+// [ {x: ..., y: ...}, {x: ..., y: ...}, ...] ]} // y is mag z
+// x is time in seconds
+
 /*
 dataSocket.onopen = function (event) {
+    var data = JSON.parse(event.data);
     for(var i=0; i<Object.keys(data).length; i++){
-        seriesData[i] = event.data[i];
+        seriesData[i] = event.data.initialdata[i];
         renderGraph(graphs[i], xAxes[i], yAxes[i], seriesData[i]);
     }
+    document.getElementById("json-image").src = event.data.image;
+    document.getElementById("panorama").src = event.data.panorama;
 };
 */
 
 // update graphs with incoming data
-// data points/second known?
+// updated data needs to be send in data format: 
+// data = { "image": "...IMAGE FILE...", 
+// "updateddata": [ {x: ..., y: ...}, // y is temperature
+// {x: ..., y: ...}, // y is humidity
+// {x: ..., y: ...}, // y is light intensity
+// {x: ..., y: ...}, // y is voltage
+// {x: ..., y: ...}, // y is gps lattitude
+// {x: ..., y: ...}, // y is gps longitude
+// {x: ..., y: ...}, // y is acceleration x
+// {x: ..., y: ...}, // y is acceleration y
+// {x: ..., y: ...}, // y is acceleration z
+// {x: ..., y: ...}, // y is gyro x
+// {x: ..., y: ...}, // y is gyro y
+// {x: ..., y: ...}, // y is gyro z
+// {x: ..., y: ...}, // y is mag x
+// {x: ..., y: ...}, // y is mag y
+// {x: ..., y: ...} ]} // y is mag z
+// x is time in seconds
+
 /*
 dataSocket.onmessage = function(event) {
     var newData = JSON.parse(event.data);
-    var time = new Date(msg.date);
+    // var time = new Date(msg.date);
     for(var i=0; i<Object.keys(data).length; i++){
-        seriesData[i].push(event.data[i]);
+        seriesData[i].push(event.data.updateddata[i]);
         graph[i].update();
     }
+    document.getElementById("json-image").src = event.data.image;
 };
 */
 
-// TESTING:
+// FOR TESTING ONLY:
 var random = new Rickshaw.Fixtures.RandomData(150);
 
 for (var i = 0; i < 150; i++) {
