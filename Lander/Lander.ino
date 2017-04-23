@@ -208,7 +208,7 @@ void loop() {
     float bat;
     if (LANDER_STATE < LANDER_UPRIGHT) {
         jsonData << "[";
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i < 21; i++) {
             if (LANDER_STATE == LANDER_LANDED){
                 flipServo.write(145);
             }
@@ -227,6 +227,17 @@ void loop() {
             else if (LANDER_STATE == LANDER_LANDED && upright()) {
                 LANDER_STATE = LANDER_UPRIGHT;
                 break;
+            }
+
+            else if (LANDER_STATE == LANDER_LANDED && i == 20) {    //reset the servo, keep collecting data
+              for (int j=0; j<20; j++){
+                  mtime = millis();
+                  bat = battery();
+                  jsonData << "{\"Time\":" << mtime << ",\"TSL\":" << tsl << ",\"BME\":" << bme << ",\"MPU\": " << mpu
+                           << ",\"Battery\":" << bat << ",\"GPS\":" << gps << "},";
+                  flipServo.write(70);
+                  delay(80);
+              }
             }
             delay(45);
         }
